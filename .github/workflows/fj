@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Advanced Typing Test</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    #text-display {
+      font-size: 20px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      min-height: 100px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+    #text-input {
+      width: 100%;
+      font-size: 18px;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .correct { color: green; }
+    .incorrect { color: red; }
+    #stats {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    #timer {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h1>Typing Test</h1>
+    <div id="timer">⏱️ Time: <span id="time">60</span>s</div>
+    <div id="text-display"></div>
+    <textarea id="text-input" placeholder="Start typing here..." rows="5"></textarea>
+    <div id="stats">
+      🧠 Accuracy: <span id="accuracy">0</span>% |
+      💨 WPM: <span id="wpm">0</span>
+    </div>
+    <button onclick="startTest()">🔁 Restart Test</button>
+  </div>
+
+  <script>
+    const sentences = [
+      "Typing is a fundamental skill used in many areas of modern life.",
+      "The quick brown fox jumps over the lazy dog.",
+      "Practice makes perfect when it comes to improving your speed.",
+      "A great typist is both accurate and fast.",
+      "Technology continues to shape the way we communicate daily."
+    ];
+
+    let timer;
+    let timeLeft = 60;
+    let startTime;
+    let isRunning = false;
+
+    const textDisplay = document.getElementById("text-display");
+    const textInput = document.getElementById("text-input");
+    const timeEl = document.getElementById("time");
+    const wpmEl = document.getElementById("wpm");
+    const accuracyEl = document.getElementById("accuracy");
+
+    function getRandomSentence() {
+      return sentences[Math.floor(Math.random() * sentences.length)];
+    }
+
+    let currentText = "";
+    let correctCount = 0;
+
+    function startTest() {
+      currentText = getRandomSentence();
+      textDisplay.innerHTML = currentText.split("").map(char => `<span>${char}</span>`).join("");
+      textInput.value = "";
+      textInput.disabled = false;
+      textInput.focus();
+      correctCount = 0;
+      wpmEl.textContent = "0";
+      accuracyEl.textContent = "0";
+      timeLeft = 60;
+      timeEl.textContent = timeLeft;
+      isRunning = false;
+      clearInterval(timer);
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      timeEl.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        textInput.disabled = true;
+        showFinalStats();
+      }
+    }
+
+    function showFinalStats() {
+      const wordsTyped = textInput.value.trim().split(/\s+/).length;
+      const minutes = (60 - timeLeft) / 60;
+      const wpm = Math.round(wordsTyped / minutes);
+      wpmEl.textContent = wpm;
+
+      const totalChars = textInput.value.length;
+      const accuracy = totalChars > 0 ? Math.round((correctCount / totalChars) * 100) : 0;
+      accuracyEl.textContent = accuracy;
+    }
+
+    textInput.addEventListener("input", () => {
+      const input = textInput.value;
+      const spans = textDisplay.querySelectorAll("span");
+
+      if (!isRunning && input.length > 0) {
+        isRunning = true;
+        startTime = new Date();
+        timer = setInterval(updateTimer, 1000);
+      }
+
+      correctCount = 0;
+
+      input.split("").forEach((char, index) => {
+        const span = spans[index];
+        if (!span) return;
+        if (char === span.textContent) {
+          span.classList.add("correct");
+          span.classList.remove("incorrect");
+          correctCount++;
+        } else {
+          span.classList.add("incorrect");
+          span.classList.remove("correct");
+        }
+      });
+
+      spans.forEach((span, index) => {
+        if (index >= input.length) {
+          span.classList.remove("correct", "incorrect");
+        }
+      });
+
+      // Live stats update
+      const wordsTyped = input.trim().split(/\s+/).length;
+      const elapsedTime = (new Date() - startTime) / 60000;
+      const wpm = Math.round(wordsTyped / elapsedTime || 0);
+      const accuracy = input.length > 0 ? Math.round((correctCount / input.length) * 100) : 0;
+
+      wpmEl.textContent = isFinite(wpm) ? wpm : 0;
+      accuracyEl.textContent = accuracy;
+    });
+
+    // Start on first load
+    startTest();
+  </script>
+</body>
+</html>
